@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cards 16:9 Neumorphic + Shimmer</title>
+  <link rel="stylesheet" href="style.cs">
+  
+</head>
+<body>
+  <div class="stage" role="region" aria-label="Container principal 16:9">
+    <div class="parent" id="grid">
+      <div class="div1"><div class="content">1</div><div class="shine"></div></div>
+
+      <!-- Card 2: header + import button + file list -->
+      <div class="div2">
+        <div class="content">
+          <div class="card2-left">
+            <h2 class="card2-title">Rede Subterrânea | Resultados</h2>
+            <!-- button triggers hidden input (mold requested) -->
+            <button id="importBtn" class="import-btn" type="button" onclick="document.getElementById('fileInput').click()">Importar Excel</button>
+          </div>
+
+          <!-- hidden file input used by the button (mold adapted to accept .xlsx/.xlsm) -->
+          <input
+            type="file"
+            id="importInput"
+            accept=".xlsx,.xlsm,application/vnd.ms-excel.sheet.macroEnabled.12,
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.html"
+            multiple
+            class="file-visually-hidden"
+          />
+
+          <div id="fileList" class="file-list" aria-live="polite" aria-label="Arquivos selecionados">
+            Nenhum arquivo selecionado.
+          </div>
+        </div>
+        <div class="shine"></div>
+      </div>
+
+      <div class="div3"><div class="content">3</div><div class="shine"></div></div>
+      <div class="div4"><div class="content">4</div><div class="shine"></div></div>
+      <div class="div5"><div class="content">5</div><div class="shine"></div></div>
+      <div class="div6"><div class="content">6</div><div class="shine"></div></div>
+      <div class="div7"><div class="content">7</div><div class="shine"></div></div>
+      <div class="div8"><div class="content">8</div><div class="shine"></div></div>
+      <div class="div9"><div class="content">9</div><div class="shine"></div></div>
+
+      <div class="div10">
+        <div class="content">
+          <div class="chart" id="chart10" aria-hidden="false">
+            <div class="legend" aria-hidden="true">
+              <div class="item"><span class="sw" style="background: linear-gradient(180deg,#ffa500,#cc8400)"></span><span>Em projeto</span></div>
+              <div class="item"><span class="sw" style="background: linear-gradient(180deg,#FF3F3F,#C92B2B)"></span><span>Em obra</span></div>
+              <div class="item"><span class="sw" style="background: linear-gradient(180deg,#80F96D,#5ED64C)"></span><span>Concluído</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="shine"></div>
+      </div>
+
+      <div class="div11">
+        <div class="content"><!-- intentionally empty --></div>
+        <div class="shine"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Chart renderer for card 10
+    (function(){
+      const chartContainer = document.getElementById('chart10');
+
+      function renderChart(counts){
+        if(!chartContainer) return;
+        const a = Number(counts['Em projeto'] || 0);
+        const b = Number(counts['Em obra'] || 0);
+        const c = Number(counts['Concluído'] || 0);
+        const data = [
+          {name: 'Em projeto', value: a, gradId: 'gOrange'},
+          {name: 'Em obra', value: b, gradId: 'gRed'},
+          {name: 'Concluído', value: c, gradId: 'gGreen'}
+        ];
+
+        const existing = chartContainer.querySelector('svg');
+        if(existing) existing.remove();
+
+        const totalMax = Math.max(...data.map(d=>d.value), 1);
+        const w = 500, h = 260;
+        const padding = {top:28, right:18, bottom:40, left:36};
+        const chartW = w - padding.left - padding.right;
+        const chartH = h - padding.top - padding.bottom;
+        const cols = data.length;
+        const gap = 24;
+        const barWidth = (chartW - gap*(cols-1)) / cols;
+        const xmlns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(xmlns, 'svg');
+        svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+
+        const defs = document.createElementNS(xmlns, 'defs');
+        const makeGrad = (id, c1, c2) => {
+          const g = document.createElementNS(xmlns,'linearGradient');
+          g.setAttribute('id', id);
+          g.setAttribute('x1','0'); g.setAttribute('y1','0'); g.setAttribute('x2','0'); g.setAttribute('y2','1');
+          g.innerHTML = `<stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/>`;
+          return g;
+        };
+        defs.appendChild(makeGrad('gRed','#FF3F3F','#C92B2B'));
+        defs.appendChild(makeGrad('gOrange','#ffa500','#cc8400'));
+        defs.appendChild(makeGrad('gGreen','#80F96D','#5ED64C'));
+        svg.appendChild(defs);
+
+        for(let i=0;i<=4;i++){
+          const y = padding.top + (chartH/4)*i;
+          const line = document.createElementNS(xmlns,'line');
+          line.setAttribute('x1', padding.left);
+          line.setAttribute('x2', w - padding.right);
+          line.setAttribute('y1', y);
+          line.setAttribute('y2', y);
+          line.setAttribute('stroke', 'rgba(255,255,255,0.02)');
+          line.setAttribute('stroke-width','1');
+          svg.appendChild(line);
+        }
+
+        data.forEach((d, i) => {
+          const g = document.createElementNS(xmlns,'g');
+          const x = padding.left + i * (barWidth + gap);
+          const valueHeight = (d.value / totalMax) * chartH;
+          const y = padding.top + (chartH - valueHeight);
+
+          const rect = document.createElementNS(xmlns,'rect');
+          rect.setAttribute('x', x);
+          rect.setAttribute('y', y);
+          rect.setAttribute('width', barWidth);
+          rect.setAttribute('height', Math.max(0, valueHeight));
+          rect.setAttribute('fill', `url(#${d.gradId})`);
+          rect.setAttribute('rx', 6);
+          rect.style.cursor = 'default';
+          g.appendChild(rect);
+
+          const vtxt = document.createElementNS(xmlns,'text');
+          vtxt.setAttribute('x', x + barWidth/2);
+          vtxt.setAttribute('y', Math.max( padding.top + 10, y - 8 ));
+          vtxt.setAttribute('text-anchor','middle');
+          vtxt.setAttribute('fill','rgba(255,255,255,0.85)');
+          vtxt.setAttribute('font-size','12');
+          vtxt.textContent = d.value;
+          g.appendChild(vtxt);
+
+          const label = document.createElementNS(xmlns,'text');
+          label.setAttribute('x', x + barWidth/2);
+          label.setAttribute('y', padding.top + chartH + 18);
+          label.setAttribute('text-anchor','middle');
+          label.setAttribute('fill','rgba(255,255,255,0.7)');
+          label.setAttribute('font-size','12');
+          label.textContent = d.name;
+          g.appendChild(label);
+
+          svg.appendChild(g);
+        });
+
+        chartContainer.appendChild(svg);
+      }
+
+      renderChart({ 'Em projeto': 0, 'Em obra': 0, 'Concluído': 0 });
+      window.renderStatusChart = renderChart;
+    })();
+  </script>
+
+  <script>
+    // Import handler: uses #fileInput (mold) to pick files, parse STATUS and update chart
+    (function(){
+      const btn = document.getElementById('importBtn');
+      const input = document.getElementById('fileInput');
+      const list = document.getElementById('fileList');
+      
+
+      if(!btn || !input || !list) return;
+
+      function norm(s){
+        return (s||'').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      }
+
+      function ensureXLSX(){
+        return new Promise((resolve, reject) => {
+          if(window.XLSX) return resolve(window.XLSX);
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js';
+          s.async = true;
+          s.onload = () => window.XLSX ? resolve(window.XLSX) : reject(new Error('XLSX not available after load'));
+          s.onerror = () => reject(new Error('Failed to load XLSX library'));
+          document.head.appendChild(s);
+        });
+      }
+
+      function readWorkbook(file){
+        return new Promise((resolve, reject) => {
+          const fr = new FileReader();
+          fr.onerror = () => reject(new Error('FileReader error'));
+          fr.onload = (e) => {
+            try{
+              const data = new Uint8Array(e.target.result);
+              const wb = XLSX.read(data, { type: 'array' });
+              resolve(wb);
+            }catch(err){
+              reject(err);
+            }
+          };
+          fr.readAsArrayBuffer(file);
+        });
+      }
+
+      async function processFiles(files){
+        await ensureXLSX();
+        const counts = { 'Em projeto': 0, 'Em obra': 0, 'Concluído': 0 };
+
+        for(const file of files){
+          try{
+            const wb = await readWorkbook(file);
+            const sheetName = wb.SheetNames && wb.SheetNames[0];
+            if(!sheetName) continue;
+            const sheet = wb.Sheets[sheetName];
+
+            const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval: '' });
+            if(rows && rows.length > 0){
+              const header = (rows[0] || []).map(h => norm(h));
+              let statusIdx = header.findIndex(h => h === 'status');
+              if(statusIdx === -1) statusIdx = header.findIndex(h => h.indexOf('status') !== -1);
+
+              if(statusIdx !== -1){
+                for(let r=1; r<rows.length; r++){
+                  const cell = norm(rows[r][statusIdx]);
+                  if(!cell) continue;
+                  if(cell.indexOf('projet') !== -1) counts['Em projeto']++;
+                  else if(cell.indexOf('obra') !== -1) counts['Em obra']++;
+                  else if(cell.indexOf('conclu') !== -1) counts['Concluído']++;
+                }
+                continue;
+              }
+            }
+
+            const objRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+            for(const r of objRows){
+              const keys = Object.keys(r || {});
+              const k = keys.find(k => norm(k) === 'status' || norm(k).indexOf('status') !== -1);
+              if(!k) continue;
+              const v = norm(r[k]);
+              if(!v) continue;
+              if(v.indexOf('projet') !== -1) counts['Em projeto']++;
+              else if(v.indexOf('obra') !== -1) counts['Em obra']++;
+              else if(v.indexOf('conclu') !== -1) counts['Em Concluído' /* fallback */]++; // unreachable fallback
+              if(v.indexOf('conclu') !== -1) counts['Concluído']++;
+            }
+          }catch(err){
+            console.warn('Erro lendo arquivo:', file.name, err);
+          }
+        }
+        return counts;
+      }
+
+      // Inline onclick already triggers input.click(); still handle change event here
+      input.addEventListener('change', async (ev) => {
+        const files = Array.from(ev.target.files || []).filter(f => f && f.name && f.name.toLowerCase().endsWith('.xlsx') || f.name.toLowerCase().endsWith('.xlsm'));
+        if(files.length === 0){
+          list.innerHTML = 'Nenhum arquivo .xlsx selecionado.';
+          return;
+        }
+
+        list.innerHTML = '';
+        files.forEach((f, idx) => {
+          const span = document.createElement('span');
+          span.className = 'name';
+          span.textContent = (idx+1) + '. ' + f.name;
+          list.appendChild(span);
+        });
+
+        try{
+          const counts = await processFiles(files);
+          if(window.renderStatusChart && typeof window.renderStatusChart === 'function'){
+            window.renderStatusChart(counts);
+          } else {
+            window._lastStatusCounts = counts;
+          }
+          const c11 = document.querySelector('.div11 .content');
+          if(c11) c11.innerHTML = '';
+          console.log('STATUS counts:', counts);
+        }catch(err){
+          console.error('Erro ao processar arquivos:', err);
+          alert('Erro ao processar arquivo(s). Verifique se os arquivos são .xlsx válidos e conexão com CDN (se necessário).');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
