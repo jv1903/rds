@@ -1,0 +1,32 @@
+:root {
+  --bg-color: #161B20;
+  --bar-color-project: #ffa500;
+  --bar-color-work: #FF3F3F;
+  --bar-color-completed: #80F96D;
+  --text-color: #d7dee3;
+  --font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-color);
+  font-family: var(--font-family);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.chart-container {
+  width: 80%;
+  max-width: 600px;
+  background-color: #222;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+canvas {
+  width: 100% !important;
+  height: 400px !important;
+}
